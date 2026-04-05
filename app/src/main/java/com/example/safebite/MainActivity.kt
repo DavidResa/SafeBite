@@ -26,6 +26,7 @@ import com.example.safebite.ui.home.HomeScreen
 import com.example.safebite.ui.profile.ProfileScreen
 import com.example.safebite.ui.scanner.ResultScreen
 import com.example.safebite.ui.scanner.ScannerScreen
+import com.example.safebite.ui.scanner.UserDetailScreen
 import com.example.safebite.ui.theme.SafeBiteTheme
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
@@ -80,8 +81,8 @@ class MainActivity : ComponentActivity() {
                                             }
                                         }
                                     },
-                                    icon = { Icon(Icons.Default.Search, contentDescription = "Scanner") },
-                                    label = { Text("Scanner") }
+                                    icon = { Icon(Icons.Default.Search, contentDescription = "Buscar") },
+                                    label = { Text("Buscar") }
                                 )
                                 NavigationBarItem(
                                     selected = currentRoute == "profile",
@@ -199,6 +200,9 @@ class MainActivity : ComponentActivity() {
                                     navController.navigate("result/$name/$barcode") {
                                         popUpTo("scanner/$name") { inclusive = true }
                                     }
+                                },
+                                onUserSelected = { targetUserId ->
+                                    navController.navigate("userDetail/$targetUserId")
                                 }
                             )
                         }
@@ -233,6 +237,17 @@ class MainActivity : ComponentActivity() {
                         
                         composable("profile") {
                             ProfileScreen()
+                        }
+                        
+                        composable(
+                            "userDetail/{userId}",
+                            arguments = listOf(navArgument("userId") { type = NavType.StringType })
+                        ) { backStackEntry ->
+                            val userId = backStackEntry.arguments?.getString("userId") ?: ""
+                            UserDetailScreen(
+                                targetUserId = userId,
+                                onBack = { navController.navigateUp() }
+                            )
                         }
                     }
                 }

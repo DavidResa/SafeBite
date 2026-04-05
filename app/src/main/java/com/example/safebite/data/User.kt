@@ -7,5 +7,7 @@ data class User(
     val username: String = "",
     val email: String = "",
     val password: String = "",
-    val allergens: String = ""
+    val allergens: String = "",
+    val friends: List<String> = emptyList(),
+    val profileImageUrl: String? = null
 )
