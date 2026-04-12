@@ -7,6 +7,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -29,7 +30,7 @@ import kotlinx.coroutines.tasks.await
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ProfileScreen() {
+fun ProfileScreen(onLogout: () -> Unit = {}) {
     val auth = FirebaseAuth.getInstance()
     val db = FirebaseFirestore.getInstance()
     val userId = auth.currentUser?.uid
@@ -99,7 +100,115 @@ fun ProfileScreen() {
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primaryContainer,
                     titleContentColor = MaterialTheme.colorScheme.primary
-                )
+                ),
+                actions = {
+                    var showSettingsDialog by remember { mutableStateOf(false) }
+                    var showDeleteConfirmDialog by remember { mutableStateOf(false) }
+                    var isProcessing by remember { mutableStateOf(false) }
+                    val currentContext = androidx.compose.ui.platform.LocalContext.current
+                    val authInst = FirebaseAuth.getInstance()
+                    val dbInst = FirebaseFirestore.getInstance()
+
+                    IconButton(onClick = { showSettingsDialog = true }) {
+                        Icon(imageVector = Icons.Default.Settings, contentDescription = "Ajustes")
+                    }
+
+                    if (showSettingsDialog) {
+                        AlertDialog(
+                            onDismissRequest = { if (!isProcessing) showSettingsDialog = false },
+                            title = { Text("Ajustes de Cuenta") },
+                            text = {
+                                Column {
+                                    Button(
+                                        onClick = { 
+                                            authInst.signOut() 
+                                            showSettingsDialog = false
+                                            onLogout()
+                                        }, 
+                                        modifier = Modifier.fillMaxWidth()
+                                    ) {
+                                        Text("Cerrar Sesión")
+                                    }
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    Button(
+                                        onClick = { 
+                                            showSettingsDialog = false
+                                            showDeleteConfirmDialog = true
+                                        }, 
+                                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
+                                        modifier = Modifier.fillMaxWidth()
+                                    ) {
+                                        Text("Eliminar Cuenta")
+                                    }
+                                }
+                            },
+                            confirmButton = {
+                                TextButton(onClick = { showSettingsDialog = false }) {
+                                    Text("Cerrar")
+                                }
+                            }
+                        )
+                    }
+
+                    if (showDeleteConfirmDialog) {
+                        AlertDialog(
+                            onDismissRequest = { if (!isProcessing) showDeleteConfirmDialog = false },
+                            title = { Text("Eliminar Cuenta", color = MaterialTheme.colorScheme.error) },
+                            text = { 
+                                if (isProcessing) {
+                                    CircularProgressIndicator()
+                                } else {
+                                    Text("¿Estás completamente seguro de que quieres eliminar tu cuenta? Esta acción no se puede deshacer y perderás todos tus datos.") 
+                                }
+                            },
+                            confirmButton = {
+                                Button(
+                                    onClick = {
+                                        isProcessing = true
+                                        kotlinx.coroutines.CoroutineScope(Dispatchers.IO).launch {
+                                            try {
+                                                val currentUser = authInst.currentUser
+                                                val uid = currentUser?.uid
+                                                if (uid != null) {
+                                                    // Optionally delete username binding
+                                                    val usernameDoc = dbInst.collection("users").document(uid).get().await()
+                                                    val uName = usernameDoc.getString("username")
+                                                    if (uName != null) {
+                                                        dbInst.collection("usernames").document(uName).delete().await()
+                                                    }
+                                                    dbInst.collection("users").document(uid).delete().await()
+                                                    currentUser.delete().await()
+                                                }
+                                                withContext(Dispatchers.Main) {
+                                                    isProcessing = false
+                                                    showDeleteConfirmDialog = false
+                                                    android.widget.Toast.makeText(currentContext, "Cuenta eliminada correctamente", android.widget.Toast.LENGTH_LONG).show()
+                                                    onLogout()
+                                                }
+                                            } catch (e: Exception) {
+                                                withContext(Dispatchers.Main) {
+                                                    isProcessing = false
+                                                    android.widget.Toast.makeText(currentContext, "Por seguridad requieres iniciar sesión nuevamente para borrar la cuenta.", android.widget.Toast.LENGTH_LONG).show()
+                                                    authInst.signOut()
+                                                    onLogout()
+                                                }
+                                            }
+                                        }
+                                    },
+                                    enabled = !isProcessing,
+                                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                                ) {
+                                    Text("Eliminar definitivamente")
+                                }
+                            },
+                            dismissButton = {
+                                TextButton(onClick = { showDeleteConfirmDialog = false }, enabled = !isProcessing) {
+                                    Text("Cancelar")
+                                }
+                            }
+                        )
+                    }
+                }
             )
         }
     ) { paddingValues ->

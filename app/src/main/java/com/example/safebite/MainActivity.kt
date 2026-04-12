@@ -53,6 +53,21 @@ class MainActivity : ComponentActivity() {
                 val navBackStackEntry by navController.currentBackStackEntryAsState()
                 val currentRoute = navBackStackEntry?.destination?.route
 
+                LaunchedEffect(Unit) {
+                    val user = auth.currentUser
+                    if (user != null) {
+                        try {
+                            val doc = db.collection("users").document(user.uid).get().await()
+                            loggedUserName = doc.getString("username") ?: "Usuario"
+                            navController.navigate("home/$loggedUserName") {
+                                popUpTo("login") { inclusive = true }
+                            }
+                        } catch (e: Exception) {
+                            Log.e("Auth", "Error en autologin", e)
+                        }
+                    }
+                }
+
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
                     snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
@@ -236,7 +251,14 @@ class MainActivity : ComponentActivity() {
                         }
                         
                         composable("profile") {
-                            ProfileScreen()
+                            ProfileScreen(
+                                onLogout = {
+                                    loggedUserName = null
+                                    navController.navigate("login") {
+                                        popUpTo(0) { inclusive = true }
+                                    }
+                                }
+                            )
                         }
                         
                         composable(

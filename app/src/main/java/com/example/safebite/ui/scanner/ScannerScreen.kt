@@ -10,6 +10,11 @@ import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.clickable
+import android.widget.MediaController
+import android.widget.VideoView
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.launch
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -17,6 +22,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import com.example.safebite.ui.profile.AvatarImage
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -336,9 +342,10 @@ fun CategoryFeed(category: String) {
             } else if (posts.isEmpty()) {
                 Text("Aún no hay publicaciones en $category", modifier = Modifier.align(Alignment.Center))
             } else {
+                val currentUserId = FirebaseAuth.getInstance().currentUser?.uid
                 LazyColumn(modifier = Modifier.fillMaxSize()) {
                     items(posts) { post ->
-                        PostCard(post)
+                        PostCard(post, currentUserId)
                     }
                 }
             }
@@ -351,13 +358,62 @@ fun CategoryFeed(category: String) {
 }
 
 @Composable
-fun PostCard(post: Post) {
+fun PostCard(post: Post, currentUserId: String? = null) {
+    val context = LocalContext.current
+    var showDeleteConfirm by remember { mutableStateOf(false) }
+
+    if (showDeleteConfirm) {
+        AlertDialog(
+            onDismissRequest = { showDeleteConfirm = false },
+            title = { Text("Eliminar publicación") },
+            text = { Text("¿Estás seguro de que quieres eliminar esta publicación?") },
+            confirmButton = {
+                TextButton(onClick = {
+                    showDeleteConfirm = false
+                    kotlinx.coroutines.CoroutineScope(Dispatchers.IO).launch {
+                        try {
+                            val db = com.google.firebase.firestore.FirebaseFirestore.getInstance()
+                            if (post.mediaType == "video" && post.mediaUrl?.startsWith("firestore_video_") == true) {
+                                val chunks = db.collection("posts").document(post.id).collection("chunks").get().await()
+                                for (doc in chunks) {
+                                    doc.reference.delete().await()
+                                }
+                            }
+                            db.collection("posts").document(post.id).delete().await()
+                            withContext(Dispatchers.Main) {
+                                Toast.makeText(context, "Publicación eliminada", Toast.LENGTH_SHORT).show()
+                            }
+                        } catch (e: Exception) {
+                            withContext(Dispatchers.Main) {
+                                Toast.makeText(context, "Error al eliminar: ${e.message}", Toast.LENGTH_SHORT).show()
+                            }
+                        }
+                    }
+                }) {
+                    Text("Eliminar", color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteConfirm = false }) {
+                    Text("Cancelar")
+                }
+            }
+        )
+    }
+
     Card(
         modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Text(post.authorUsername, style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary)
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                Text(post.authorUsername, style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary)
+                if (currentUserId != null && currentUserId == post.authorId) {
+                    IconButton(onClick = { showDeleteConfirm = true }) {
+                        Icon(Icons.Default.Delete, contentDescription = "Eliminar", tint = MaterialTheme.colorScheme.error)
+                    }
+                }
+            }
             Spacer(modifier = Modifier.height(8.dp))
             if (post.textContent.isNotEmpty()) {
                 Text(post.textContent, style = MaterialTheme.typography.bodyMedium)
@@ -365,16 +421,99 @@ fun PostCard(post: Post) {
             }
             if (post.mediaUrl != null) {
                 if (post.mediaType == "image") {
-                    coil.compose.AsyncImage(
-                        model = post.mediaUrl,
-                        contentDescription = "Post image",
-                        modifier = Modifier.fillMaxWidth().height(200.dp)
-                    )
+                    if (post.mediaUrl.startsWith("data:image")) {
+                        com.example.safebite.ui.profile.AvatarImage(
+                            imageUrl = post.mediaUrl,
+                            modifier = Modifier.fillMaxWidth().height(200.dp),
+                            contentScale = ContentScale.Crop,
+                            placeholderTint = MaterialTheme.colorScheme.primary
+                        )
+                    } else {
+                        coil.compose.AsyncImage(
+                            model = post.mediaUrl,
+                            contentDescription = "Post image",
+                            modifier = Modifier.fillMaxWidth().height(200.dp)
+                        )
+                    }
                 } else if (post.mediaType == "video") {
-                    Text("[Video subido - Haz click aquí para verlo en el navegador]", color = MaterialTheme.colorScheme.secondary)
+                    if (post.mediaUrl.startsWith("firestore_video_")) {
+                        val chunksCount = post.mediaUrl.substringAfter("firestore_video_").toIntOrNull() ?: 0
+                        FirestoreVideoPlayer(post.id, chunksCount)
+                    } else {
+                        Text("[Video externo - Haz click aquí para verlo en el navegador]", color = MaterialTheme.colorScheme.secondary)
+                    }
                 }
             }
         }
+    }
+}
+
+@Composable
+fun FirestoreVideoPlayer(postId: String, chunksCount: Int) {
+    val context = LocalContext.current
+    var videoFile by remember { mutableStateOf<java.io.File?>(null) }
+    var isDownloading by remember { mutableStateOf(true) }
+    var downloadProgress by remember { mutableStateOf(0f) }
+
+    LaunchedEffect(postId) {
+        isDownloading = true
+        withContext(Dispatchers.IO) {
+            val file = java.io.File(context.cacheDir, "video_$postId.mp4")
+            if (file.exists() && file.length() > 0) {
+                videoFile = file
+                isDownloading = false
+                return@withContext
+            }
+
+            try {
+                val db = com.google.firebase.firestore.FirebaseFirestore.getInstance()
+                val outputStream = java.io.FileOutputStream(file)
+                
+                for (i in 0 until chunksCount) {
+                    val snapshot = db.collection("posts").document(postId)
+                                     .collection("chunks").document("chunk_$i")
+                                     .get().await()
+                    val blob = snapshot.getBlob("data")
+                    if (blob != null) {
+                        outputStream.write(blob.toBytes())
+                    }
+                    downloadProgress = (i + 1).toFloat() / chunksCount.toFloat()
+                }
+                outputStream.close()
+                videoFile = file
+            } catch (e: Exception) {
+                e.printStackTrace()
+                if (file.exists()) file.delete()
+            }
+        }
+        isDownloading = false
+    }
+
+    if (isDownloading) {
+        Column(
+            modifier = Modifier.fillMaxWidth().height(200.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            CircularProgressIndicator(progress = { downloadProgress })
+            Spacer(modifier = Modifier.height(8.dp))
+            Text("Descargando video... ${(downloadProgress * 100).toInt()}%")
+        }
+    } else if (videoFile != null) {
+        AndroidView(
+            factory = { ctx ->
+                VideoView(ctx).apply {
+                    setVideoPath(videoFile!!.absolutePath)
+                    val mediaController = MediaController(ctx)
+                    mediaController.setAnchorView(this)
+                    setMediaController(mediaController)
+                    setOnPreparedListener { it.isLooping = true; start() }
+                }
+            },
+            modifier = Modifier.fillMaxWidth().height(300.dp)
+        )
+    } else {
+        Text("Error al reproducir el video de la base de datos.", color = MaterialTheme.colorScheme.error)
     }
 }
 
@@ -463,23 +602,29 @@ fun UploadPostDialog(category: String, onDismiss: () -> Unit) {
                         }
                         
                         if (selectedMediaUri != null) {
-                            val storageRef = com.google.firebase.storage.FirebaseStorage.getInstance().reference
-                            val fileName = UUID.randomUUID().toString() + if (isVideo) ".mp4" else ".jpg"
-                            val fileRef = storageRef.child("posts_media/$fileName")
-                            
-                            fileRef.putFile(selectedMediaUri!!)
-                                .addOnSuccessListener {
-                                    fileRef.downloadUrl.addOnSuccessListener { url ->
-                                        uploadPost(url.toString(), if (isVideo) "video" else "image")
-                                    }.addOnFailureListener {
+                            if (isVideo) {
+                                kotlinx.coroutines.CoroutineScope(Dispatchers.Main).launch {
+                                    try {
+                                        val count = com.example.safebite.utils.MediaUtils.processAndUploadVideoChunks(context, selectedMediaUri!!, postId)
+                                        uploadPost("firestore_video_$count", "video")
+                                    } catch (e: Exception) {
                                         isUploading = false
-                                        Toast.makeText(context, "Error al obtener URL", Toast.LENGTH_SHORT).show()
+                                        Toast.makeText(context, "Error procesando video en base de datos: ${e.message}", Toast.LENGTH_LONG).show()
                                     }
                                 }
-                                .addOnFailureListener { e ->
-                                    isUploading = false
-                                    Toast.makeText(context, "Error subiendo archivo. Revise Firebase Storage.", Toast.LENGTH_LONG).show()
+                            } else {
+                                kotlinx.coroutines.CoroutineScope(Dispatchers.Main).launch {
+                                    val base64Str = withContext(Dispatchers.IO) {
+                                        com.example.safebite.utils.MediaUtils.processImageUriToBase64(context, selectedMediaUri!!)
+                                    }
+                                    if (base64Str != null) {
+                                        uploadPost(base64Str, "image")
+                                    } else {
+                                        isUploading = false
+                                        Toast.makeText(context, "Error al procesar la imagen local", Toast.LENGTH_SHORT).show()
+                                    }
                                 }
+                            }
                         } else {
                             uploadPost(null, null)
                         }
