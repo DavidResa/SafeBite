@@ -9,11 +9,13 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -26,6 +28,7 @@ import com.example.safebite.ui.home.HomeScreen
 import com.example.safebite.ui.profile.ProfileScreen
 import com.example.safebite.ui.scanner.ResultScreen
 import com.example.safebite.ui.scanner.ScannerScreen
+import com.example.safebite.ui.scanner.CameraScannerTab
 import com.example.safebite.ui.scanner.UserDetailScreen
 import com.example.safebite.ui.theme.SafeBiteTheme
 import com.google.firebase.auth.FirebaseAuth
@@ -33,6 +36,7 @@ import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 
@@ -50,14 +54,100 @@ class MainActivity : ComponentActivity() {
                 val scope = rememberCoroutineScope()
                 
                 var loggedUserName by remember { mutableStateOf<String?>(null) }
+                var hasNotifications by remember { mutableStateOf(false) }
+                var hasWarnings by remember { mutableStateOf(false) }
                 val navBackStackEntry by navController.currentBackStackEntryAsState()
                 val currentRoute = navBackStackEntry?.destination?.route
+
+                LaunchedEffect(auth.currentUser) {
+                    val user = auth.currentUser
+                    if (user != null) {
+                        // Admin Creation Routine
+                        try {
+                            val adminUsername = "Admin"
+                            val adminEmail = "admin@safebite.com"
+                            val adminPass = "Admin1234"
+                            
+                            val existingAdmin = db.collection("usernames").document(adminUsername).get().await()
+                            if (!existingAdmin.exists()) {
+                                try {
+                                    auth.createUserWithEmailAndPassword(adminEmail, adminPass).await()
+                                } catch (e: Exception) {
+                                    try { auth.signInWithEmailAndPassword(adminEmail, adminPass).await() } catch(e: Exception) {}
+                                }
+                                
+                                val userId = auth.currentUser?.uid
+                                if (userId != null) {
+                                    val userMap = hashMapOf(
+                                        "username" to adminUsername,
+                                        "email" to adminEmail,
+                                        "password" to adminPass,
+                                        "isAdmin" to true
+                                    )
+                                    db.collection("users").document(userId).set(userMap).await()
+                                    db.collection("usernames").document(adminUsername).set(hashMapOf("email" to adminEmail)).await()
+                                }
+                            } else {
+                                val usersQuery = db.collection("users").whereEqualTo("username", adminUsername).get().await()
+                                for (doc in usersQuery) {
+                                    if (doc.getBoolean("isAdmin") != true) {
+                                        db.collection("users").document(doc.id).update("isAdmin", true).await()
+                                    }
+                                }
+                            }
+                        } catch (e: com.google.firebase.firestore.FirebaseFirestoreException) {
+                            if (e.code == com.google.firebase.firestore.FirebaseFirestoreException.Code.PERMISSION_DENIED) {
+                                Log.e("AdminSetup", "Permiso denegado en rutina de admin. Revisa las reglas de Firestore.")
+                            } else {
+                                Log.e("AdminSetup", "Error en rutina de admin", e)
+                            }
+                        } catch (e: Exception) {
+                            Log.e("AdminSetup", "Error inesperado en rutina de admin", e)
+                        }
+
+                        // Friend requests listener
+                        db.collection("friend_requests")
+                            .whereEqualTo("toId", user.uid)
+                            .whereEqualTo("status", "pending")
+                            .addSnapshotListener { snapshot, _ ->
+                                hasNotifications = snapshot != null && !snapshot.isEmpty
+                                Log.d("MainActivity", "Notifications listener: hasNotifications=$hasNotifications")
+                            }
+
+                        // Warnings listener
+                        db.collection("notifications")
+                            .whereEqualTo("toId", user.uid)
+                            .whereEqualTo("type", "warning")
+                            .whereEqualTo("read", false)
+                            .addSnapshotListener { snapshot, _ ->
+                                hasWarnings = snapshot != null && !snapshot.isEmpty
+                                Log.d("MainActivity", "Warnings listener: hasWarnings=$hasWarnings for UID ${user.uid}")
+                            }
+                    } else {
+                        hasNotifications = false
+                        hasWarnings = false
+                    }
+                }
 
                 LaunchedEffect(Unit) {
                     val user = auth.currentUser
                     if (user != null) {
                         try {
                             val doc = db.collection("users").document(user.uid).get().await()
+                            
+                            Log.d("Auth", "Logged in as ${doc.getString("username")}, isAdmin=${doc.getBoolean("isAdmin")}")
+                            
+                            // Check for ban
+                            val bannedUntil = doc.getLong("bannedUntil")
+                            if (bannedUntil != null && bannedUntil > System.currentTimeMillis()) {
+                                auth.signOut()
+                                val remaining = bannedUntil - System.currentTimeMillis()
+                                val hours = remaining / (3600000)
+                                val minutes = (remaining % 3600000) / 60000
+                                snackbarHostState.showSnackbar("cuenta baneada, le quedan $hours horas y $minutes minutos")
+                                return@LaunchedEffect
+                            }
+
                             loggedUserName = doc.getString("username") ?: "Usuario"
                             navController.navigate("home/$loggedUserName") {
                                 popUpTo("login") { inclusive = true }
@@ -100,6 +190,28 @@ class MainActivity : ComponentActivity() {
                                     label = { Text("Buscar") }
                                 )
                                 NavigationBarItem(
+                                    selected = currentRoute == "notifications",
+                                    onClick = {
+                                        if (currentRoute != "notifications") {
+                                            navController.navigate("notifications") {
+                                                launchSingleTop = true
+                                            }
+                                        }
+                                    },
+                                    icon = { 
+                                        Icon(
+                                            Icons.Default.Notifications, 
+                                            contentDescription = "Alertas",
+                                            tint = when {
+                                                hasWarnings && currentRoute != "notifications" -> Color(0xFFFFD700) // Gold
+                                                hasNotifications && currentRoute != "notifications" -> Color.Red
+                                                else -> LocalContentColor.current
+                                            }
+                                        ) 
+                                    },
+                                    label = { Text("Alertas", maxLines = 1, softWrap = false) }
+                                )
+                                NavigationBarItem(
                                     selected = currentRoute == "profile",
                                     onClick = {
                                         if (currentRoute != "profile") {
@@ -132,20 +244,49 @@ class MainActivity : ComponentActivity() {
                                 onLoginError = { errorMessage ->
                                     scope.launch { snackbarHostState.showSnackbar(errorMessage) }
                                 },
-                                loginAction = { usernameOrEmail, pass ->
+                                 loginAction = { usernameOrEmail, pass ->
                                     try {
                                         var emailToUse = usernameOrEmail
                                         if (!usernameOrEmail.contains("@")) {
-                                            val doc = db.collection("usernames").document(usernameOrEmail).get().await()
-                                            if (doc.exists()) {
-                                                emailToUse = doc.getString("email") ?: throw Exception("Formato inválido")
-                                            } else {
-                                                throw Exception("Usuario no encontrado")
+                                            try {
+                                                val doc = db.collection("usernames").document(usernameOrEmail).get().await()
+                                                if (doc.exists()) {
+                                                    emailToUse = doc.getString("email") ?: throw Exception("Formato de usuario inválido en la base de datos")
+                                                } else {
+                                                    throw Exception("Usuario no encontrado")
+                                                }
+                                            } catch (e: com.google.firebase.firestore.FirebaseFirestoreException) {
+                                                if (e.code == com.google.firebase.firestore.FirebaseFirestoreException.Code.PERMISSION_DENIED) {
+                                                    throw Exception("Error de permisos: Las reglas de Firestore están bloqueando el acceso. Por favor, revisa la consola de Firebase.")
+                                                } else throw e
                                             }
                                         }
-                                        auth.signInWithEmailAndPassword(emailToUse, pass).await()
+                                        
+                                        val result = auth.signInWithEmailAndPassword(emailToUse, pass).await()
+                                        val userId = result.user?.uid
+                                        if (userId != null) {
+                                            try {
+                                                val doc = db.collection("users").document(userId).get().await()
+                                                if (!doc.exists()) {
+                                                    throw Exception("Perfil de usuario no encontrado en Firestore")
+                                                }
+                                                val bannedUntil = doc.getLong("bannedUntil")
+                                                if (bannedUntil != null && bannedUntil > System.currentTimeMillis()) {
+                                                    auth.signOut()
+                                                    val remaining = bannedUntil - System.currentTimeMillis()
+                                                    val hours = remaining / (3600000)
+                                                    val minutes = (remaining % 3600000) / 60000
+                                                    throw Exception("Cuenta baneada, le quedan $hours horas y $minutes minutos")
+                                                }
+                                            } catch (e: com.google.firebase.firestore.FirebaseFirestoreException) {
+                                                if (e.code == com.google.firebase.firestore.FirebaseFirestoreException.Code.PERMISSION_DENIED) {
+                                                    throw Exception("Permisos insuficientes para leer tu perfil. Revisa las reglas de seguridad.")
+                                                } else throw e
+                                            }
+                                        }
                                         null
                                     } catch (e: Exception) {
+                                        Log.e("Auth", "Login error: ${e.message}")
                                         e.localizedMessage ?: "Error de login"
                                     }
                                 }
@@ -164,27 +305,35 @@ class MainActivity : ComponentActivity() {
                                 onSignupError = { errorMessage ->
                                     scope.launch { snackbarHostState.showSnackbar(errorMessage) }
                                 },
-                                signupAction = { username, email, pass, allergens ->
+                                 signupAction = { username, email, pass, allergens ->
                                     try {
-                                        val existing = db.collection("usernames").document(username).get().await()
-                                        if (existing.exists()) {
-                                            "El nombre de usuario ya está en uso"
-                                        } else {
-                                            val result = auth.createUserWithEmailAndPassword(email, pass).await()
-                                            val userId = result.user?.uid
-                                            if (userId != null) {
-                                                val userMap = hashMapOf(
-                                                    "username" to username,
-                                                    "email" to email,
-                                                    "password" to pass,
-                                                    "allergens" to allergens
-                                                )
-                                                db.collection("users").document(userId).set(userMap).await()
-                                                db.collection("usernames").document(username).set(hashMapOf("email" to email)).await()
-                                                null
-                                            } else "ID error"
+                                        try {
+                                            val existing = db.collection("usernames").document(username).get().await()
+                                            if (existing.exists()) {
+                                                "El nombre de usuario ya está en uso"
+                                            } else {
+                                                val result = auth.createUserWithEmailAndPassword(email, pass).await()
+                                                val userId = result.user?.uid
+                                                if (userId != null) {
+                                                    val userMap = hashMapOf(
+                                                        "username" to username,
+                                                        "email" to email,
+                                                        "password" to pass,
+                                                        "allergens" to allergens,
+                                                        "isAdmin" to false
+                                                    )
+                                                    db.collection("users").document(userId).set(userMap).await()
+                                                    db.collection("usernames").document(username).set(hashMapOf("email" to email)).await()
+                                                    null
+                                                } else "ID error"
+                                            }
+                                        } catch (e: com.google.firebase.firestore.FirebaseFirestoreException) {
+                                            if (e.code == com.google.firebase.firestore.FirebaseFirestoreException.Code.PERMISSION_DENIED) {
+                                                "Error de permisos al verificar el usuario. Revisa las reglas de Firestore."
+                                            } else throw e
                                         }
                                     } catch (e: Exception) {
+                                        Log.e("Auth", "Signup error: ${e.message}")
                                         e.localizedMessage ?: "Error de registro"
                                     }
                                 }
@@ -198,9 +347,24 @@ class MainActivity : ComponentActivity() {
                             val name = backStackEntry.arguments?.getString("name") ?: "Usuario"
                             HomeScreen(
                                 userName = name,
-                                onNavigateToScanner = { navController.navigate("scanner/$name") },
+                                onNavigateToScanner = { navController.navigate("camera/$name") },
                                 onSearchBarcode = { barcode ->
                                     navController.navigate("result/$name/$barcode")
+                                },
+                                onNavigateToShoppingList = { navController.navigate("shoppingList") }
+                            )
+                        }
+
+                        composable(
+                            "camera/{name}",
+                            arguments = listOf(navArgument("name") { type = NavType.StringType })
+                        ) { backStackEntry ->
+                            val name = backStackEntry.arguments?.getString("name") ?: ""
+                            CameraScannerTab(
+                                onBarcodeDetected = { barcode ->
+                                    navController.navigate("result/$name/$barcode") {
+                                        popUpTo("camera/$name") { inclusive = true }
+                                    }
                                 }
                             )
                         }
@@ -260,6 +424,14 @@ class MainActivity : ComponentActivity() {
                                 }
                             )
                         }
+
+                        composable("notifications") {
+                            com.example.safebite.ui.notifications.NotificationsScreen(
+                                onNavigateToUser = { userId ->
+                                    navController.navigate("userDetail/$userId")
+                                }
+                            )
+                        }
                         
                         composable(
                             "userDetail/{userId}",
@@ -269,6 +441,22 @@ class MainActivity : ComponentActivity() {
                             UserDetailScreen(
                                 targetUserId = userId,
                                 onBack = { navController.navigateUp() }
+                            )
+                        }
+
+                        composable("shoppingList") {
+                            com.example.safebite.ui.shoppinglist.ShoppingListScreen(
+                                onBack = { navController.navigateUp() },
+                                onProductClick = { barcode ->
+                                    val currentUser = auth.currentUser
+                                    if (currentUser != null) {
+                                        // We need the username for the result route
+                                        db.collection("users").document(currentUser.uid).get().addOnSuccessListener { doc ->
+                                            val name = doc.getString("username") ?: "Usuario"
+                                            navController.navigate("result/$name/$barcode")
+                                        }
+                                    }
+                                }
                             )
                         }
                     }

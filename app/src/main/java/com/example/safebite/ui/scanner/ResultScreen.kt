@@ -10,9 +10,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.platform.LocalContext
 import coil.compose.AsyncImage
 import com.example.safebite.data.api.Product
 import com.example.safebite.data.api.RetrofitClient
+import com.example.safebite.utils.HistoryUtils
+import com.example.safebite.utils.ShoppingListUtils
+import com.example.safebite.utils.ScannedProduct
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -22,17 +26,20 @@ fun ResultScreen(
     userAllergens: String,
     onBack: () -> Unit
 ) {
+    val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var product by remember { mutableStateOf<Product?>(null) }
     var isLoading by remember { mutableStateOf(true) }
     var error by remember { mutableStateOf<String?>(null) }
+    var isAddedToList by remember { mutableStateOf(false) }
 
     LaunchedEffect(barcode) {
         scope.launch {
             try {
                 val response = RetrofitClient.api.getProduct(barcode)
-                if (response.status == 1) {
+                if (response.status == 1 && response.product != null) {
                     product = response.product
+                    HistoryUtils.addToHistory(context, barcode, response.product)
                 } else {
                     error = "Producto no encontrado"
                 }
@@ -42,6 +49,10 @@ fun ResultScreen(
                 isLoading = false
             }
         }
+    }
+    
+    LaunchedEffect(barcode) {
+        isAddedToList = ShoppingListUtils.isInShoppingList(barcode)
     }
 
     Scaffold(
@@ -92,6 +103,36 @@ fun ResultScreen(
                     Spacer(modifier = Modifier.height(16.dp))
                     Text(text = "Ingredientes:", style = MaterialTheme.typography.titleLarge)
                     Text(text = product!!.ingredientsText ?: "No especificados", style = MaterialTheme.typography.bodyMedium)
+                    
+                    Spacer(modifier = Modifier.height(32.dp))
+                    
+                    Button(
+                        onClick = {
+                            scope.launch {
+                                try {
+                                    ShoppingListUtils.addToShoppingList(
+                                        ScannedProduct(
+                                            barcode = barcode,
+                                            productName = product!!.productName ?: "Producto",
+                                            imageUrl = product!!.imageUrl
+                                        )
+                                    )
+                                    isAddedToList = true
+                                } catch (e: Exception) { }
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth().height(56.dp),
+                        shape = MaterialTheme.shapes.medium,
+                        colors = if (isAddedToList) {
+                            ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.outline)
+                        } else {
+                            ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                        }
+                    ) {
+                        Text(if (isAddedToList) "Añadido" else "Añadir lista de la compra")
+                    }
+                    
+                    Spacer(modifier = Modifier.height(16.dp))
                 }
             }
         }

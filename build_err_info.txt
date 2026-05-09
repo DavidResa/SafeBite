@@ -1,0 +1,242 @@
+Initialized native services in: C:\Users\davic\.gradle\native
+Initialized jansi services in: C:\Users\davic\.gradle\native
+The client will now receive all logging from the daemon (pid: 19216). The daemon log file: C:\Users\davic\.gradle\daemon\9.2.1\daemon-19216.out.log
+Starting 11th build in daemon [uptime: 2 hrs 39 mins 18.885 secs, performance: 99%, GC rate: 0.00/s, heap usage: 0% of 2 GiB]
+Using 16 worker leases.
+Operational build model parameters: {requiresToolingModels=false, parallelProjectExecution=false, configureOnDemand=false, configurationCache=false, configurationCacheParallelStore=false, configurationCacheParallelLoad=true, isolatedProjects=false, parallelProjectConfiguration=false, intermediateModelCache=false, parallelToolingApiActions=false, invalidateCoupledProjects=false, modelAsProjectDependency=false, resilientModelBuilding=false}
+Now considering [C:\Users\davic\Desktop\Rey Fernando\SafeBite] as hierarchies to watch
+Watching the file system is configured to be enabled if available
+File system watching is active
+Starting Build
+Resolved plugin [id: 'org.gradle.toolchains.foojay-resolver-convention', version: '1.0.0']
+Settings evaluated using settings file 'C:\Users\davic\Desktop\Rey Fernando\SafeBite\settings.gradle.kts'.
+Projects loaded. Root project using build file 'C:\Users\davic\Desktop\Rey Fernando\SafeBite\build.gradle.kts'.
+Included projects: [root project 'SafeBite', project ':app']
+
+> Configure project :
+Evaluating root project 'SafeBite' using build file 'C:\Users\davic\Desktop\Rey Fernando\SafeBite\build.gradle.kts'.
+Resolved plugin [id: 'com.android.application', version: '8.7.3', apply: false]
+Resolved plugin [id: 'org.jetbrains.kotlin.android', version: '2.0.21', apply: false]
+Resolved plugin [id: 'org.jetbrains.kotlin.plugin.compose', version: '2.0.21', apply: false]
+Resolved plugin [id: 'org.jetbrains.kotlin.plugin.serialization', version: '2.0.21', apply: false]
+Resolved plugin [id: 'com.google.devtools.ksp', version: '2.0.21-1.0.27', apply: false]
+Resolved plugin [id: 'com.google.gms.google-services', version: '4.4.2', apply: false]
+
+> Configure project :app
+Evaluating project ':app' using build file 'C:\Users\davic\Desktop\Rey Fernando\SafeBite\app\build.gradle.kts'.
+Resolved plugin [id: 'com.android.application', version: '8.7.3']
+Resolved plugin [id: 'org.jetbrains.kotlin.android', version: '2.0.21']
+Resolved plugin [id: 'org.jetbrains.kotlin.plugin.compose', version: '2.0.21']
+Resolved plugin [id: 'org.jetbrains.kotlin.plugin.serialization', version: '2.0.21']
+Resolved plugin [id: 'com.google.devtools.ksp', version: '2.0.21-1.0.27']
+Resolved plugin [id: 'com.google.gms.google-services', version: '4.4.2']
+Using default execution profile
+Using Kotlin Gradle Plugin gradle85 variant
+Detected Android Gradle Plugin compose compiler configuration
+Detected Android Gradle Plugin compose compiler configuration
+Detected Android Gradle Plugin compose compiler configuration
+Detected Android Gradle Plugin compose compiler configuration
+Detected Android Gradle Plugin compose compiler configuration
+All projects evaluated.
+Task path ':app:kspDebugKotlin' matched project ':app'
+Task name matched 'kspDebugKotlin'
+Selected primary task 'kspDebugKotlin' from project :app
+Path for java installation 'C:\Users\davic\.jdks\openjdk-24' (IntelliJ) auto-detected does not contain a java executable
+Tasks to be executed: [task ':app:checkKotlinGradlePluginConfigurationErrors', task ':app:preBuild', task ':app:preDebugBuild', task ':app:checkDebugAarMetadata', task ':app:generateDebugResValues', task ':app:processDebugGoogleServices', task ':app:mapDebugSourceSetPaths', task ':app:generateDebugResources', task ':app:mergeDebugResources', task ':app:packageDebugResources', task ':app:parseDebugLocalResources', task ':app:createDebugCompatibleScreenManifests', task ':app:extractDeepLinksDebug', task ':app:processDebugMainManifest', task ':app:processDebugManifest', task ':app:processDebugManifestForPackage', task ':app:processDebugResources', task ':app:kspDebugKotlin']
+Tasks that were excluded: []
+Resolve mutations for :app:checkKotlinGradlePluginConfigurationErrors (Thread[#1736,Execution worker,5,main]) started.
+:app:checkKotlinGradlePluginConfigurationErrors (Thread[#1736,Execution worker,5,main]) started.
+
+> Task :app:checkKotlinGradlePluginConfigurationErrors SKIPPED
+Skipping task ':app:checkKotlinGradlePluginConfigurationErrors' as task onlyIf 'errorDiagnostics are present' is false.
+Resolve mutations for :app:preBuild (Thread[#1736,Execution worker,5,main]) started.
+:app:preBuild (Thread[#1740,Execution worker Thread 5,5,main]) started.
+
+> Task :app:preBuild UP-TO-DATE
+Skipping task ':app:preBuild' as it has no actions.
+Resolve mutations for :app:preDebugBuild (Thread[#1740,Execution worker Thread 5,5,main]) started.
+:app:preDebugBuild (Thread[#1744,Execution worker Thread 9,5,main]) started.
+
+> Task :app:preDebugBuild UP-TO-DATE
+Skipping task ':app:preDebugBuild' as it has no actions.
+Resolve mutations for :app:checkDebugAarMetadata (Thread[#1744,Execution worker Thread 9,5,main]) started.
+:app:checkDebugAarMetadata (Thread[#1744,Execution worker Thread 9,5,main]) started.
+
+> Task :app:checkDebugAarMetadata UP-TO-DATE
+Caching disabled for task ':app:checkDebugAarMetadata' because:
+  Build cache is disabled
+  Caching has been disabled for the task
+Skipping task ':app:checkDebugAarMetadata' as it is up-to-date.
+Resolve mutations for :app:generateDebugResValues (Thread[#1744,Execution worker Thread 9,5,main]) started.
+:app:generateDebugResValues (Thread[#1744,Execution worker Thread 9,5,main]) started.
+
+> Task :app:generateDebugResValues UP-TO-DATE
+Caching disabled for task ':app:generateDebugResValues' because:
+  Build cache is disabled
+Skipping task ':app:generateDebugResValues' as it is up-to-date.
+Resolve mutations for :app:processDebugGoogleServices (Thread[#1744,Execution worker Thread 9,5,main]) started.
+:app:processDebugGoogleServices (Thread[#1741,Execution worker Thread 6,5,main]) started.
+
+> Task :app:processDebugGoogleServices UP-TO-DATE
+Caching disabled for task ':app:processDebugGoogleServices' because:
+  Build cache is disabled
+Skipping task ':app:processDebugGoogleServices' as it is up-to-date.
+Resolve mutations for :app:mapDebugSourceSetPaths (Thread[#1741,Execution worker Thread 6,5,main]) started.
+:app:mapDebugSourceSetPaths (Thread[#1746,Execution worker Thread 11,5,main]) started.
+
+> Task :app:mapDebugSourceSetPaths UP-TO-DATE
+Caching disabled for task ':app:mapDebugSourceSetPaths' because:
+  Build cache is disabled
+  Caching has been disabled for the task
+Skipping task ':app:mapDebugSourceSetPaths' as it is up-to-date.
+Resolve mutations for :app:generateDebugResources (Thread[#1746,Execution worker Thread 11,5,main]) started.
+:app:generateDebugResources (Thread[#1746,Execution worker Thread 11,5,main]) started.
+
+> Task :app:generateDebugResources UP-TO-DATE
+Caching disabled for task ':app:generateDebugResources' because:
+  Build cache is disabled
+Skipping task ':app:generateDebugResources' as it is up-to-date.
+Resolve mutations for :app:mergeDebugResources (Thread[#1746,Execution worker Thread 11,5,main]) started.
+:app:mergeDebugResources (Thread[#1746,Execution worker Thread 11,5,main]) started.
+
+> Task :app:mergeDebugResources UP-TO-DATE
+Caching disabled for task ':app:mergeDebugResources' because:
+  Build cache is disabled
+Skipping task ':app:mergeDebugResources' as it is up-to-date.
+Resolve mutations for :app:packageDebugResources (Thread[#1746,Execution worker Thread 11,5,main]) started.
+:app:packageDebugResources (Thread[#1746,Execution worker Thread 11,5,main]) started.
+
+> Task :app:packageDebugResources UP-TO-DATE
+Caching disabled for task ':app:packageDebugResources' because:
+  Build cache is disabled
+Skipping task ':app:packageDebugResources' as it is up-to-date.
+Resolve mutations for :app:parseDebugLocalResources (Thread[#1746,Execution worker Thread 11,5,main]) started.
+:app:parseDebugLocalResources (Thread[#1746,Execution worker Thread 11,5,main]) started.
+
+> Task :app:parseDebugLocalResources UP-TO-DATE
+Caching disabled for task ':app:parseDebugLocalResources' because:
+  Build cache is disabled
+Skipping task ':app:parseDebugLocalResources' as it is up-to-date.
+Resolve mutations for :app:createDebugCompatibleScreenManifests (Thread[#1746,Execution worker Thread 11,5,main]) started.
+:app:createDebugCompatibleScreenManifests (Thread[#1746,Execution worker Thread 11,5,main]) started.
+
+> Task :app:createDebugCompatibleScreenManifests UP-TO-DATE
+Caching disabled for task ':app:createDebugCompatibleScreenManifests' because:
+  Build cache is disabled
+  Caching has been disabled for the task
+Skipping task ':app:createDebugCompatibleScreenManifests' as it is up-to-date.
+Resolve mutations for :app:extractDeepLinksDebug (Thread[#1746,Execution worker Thread 11,5,main]) started.
+:app:extractDeepLinksDebug (Thread[#1746,Execution worker Thread 11,5,main]) started.
+
+> Task :app:extractDeepLinksDebug UP-TO-DATE
+Caching disabled for task ':app:extractDeepLinksDebug' because:
+  Build cache is disabled
+Skipping task ':app:extractDeepLinksDebug' as it is up-to-date.
+Resolve mutations for :app:processDebugMainManifest (Thread[#1746,Execution worker Thread 11,5,main]) started.
+:app:processDebugMainManifest (Thread[#1746,Execution worker Thread 11,5,main]) started.
+
+> Task :app:processDebugMainManifest UP-TO-DATE
+Caching disabled for task ':app:processDebugMainManifest' because:
+  Build cache is disabled
+Skipping task ':app:processDebugMainManifest' as it is up-to-date.
+Resolve mutations for :app:processDebugManifest (Thread[#1746,Execution worker Thread 11,5,main]) started.
+:app:processDebugManifest (Thread[#1746,Execution worker Thread 11,5,main]) started.
+
+> Task :app:processDebugManifest UP-TO-DATE
+Caching disabled for task ':app:processDebugManifest' because:
+  Build cache is disabled
+Skipping task ':app:processDebugManifest' as it is up-to-date.
+Resolve mutations for :app:processDebugManifestForPackage (Thread[#1746,Execution worker Thread 11,5,main]) started.
+:app:processDebugManifestForPackage (Thread[#1749,Execution worker Thread 14,5,main]) started.
+
+> Task :app:processDebugManifestForPackage UP-TO-DATE
+Custom actions are attached to task ':app:processDebugManifestForPackage'.
+Caching disabled for task ':app:processDebugManifestForPackage' because:
+  Build cache is disabled
+Skipping task ':app:processDebugManifestForPackage' as it is up-to-date.
+Resolve mutations for :app:processDebugResources (Thread[#1749,Execution worker Thread 14,5,main]) started.
+:app:processDebugResources (Thread[#1749,Execution worker Thread 14,5,main]) started.
+
+> Task :app:processDebugResources UP-TO-DATE
+Registered task dependencies: app:debugCompileClasspath
+Skipping misunderstood TO dep string: androidx.compose.ui:ui-tooling
+Skipping misunderstood TO dep string: androidx.compose.ui:ui-test-manifest
+Skipping misunderstood TO dep string: androidx.compose.ui:ui
+Skipping misunderstood TO dep string: androidx.compose.ui:ui-graphics
+Skipping misunderstood TO dep string: androidx.compose.ui:ui-tooling-preview
+Skipping misunderstood TO dep string: androidx.compose.material3:material3
+Skipping misunderstood TO dep string: com.google.firebase:firebase-auth
+Skipping misunderstood TO dep string: com.google.firebase:firebase-firestore
+Skipping misunderstood TO dep string: com.google.firebase:firebase-storage
+Starting dependency analysis
+Caching disabled for task ':app:processDebugResources' because:
+  Build cache is disabled
+Skipping task ':app:processDebugResources' as it is up-to-date.
+Resolve mutations for :app:kspDebugKotlin (Thread[#1749,Execution worker Thread 14,5,main]) started.
+:app:kspDebugKotlin (Thread[#1749,Execution worker Thread 14,5,main]) started.
+
+> Task :app:kspDebugKotlin FAILED
+file or directory 'C:\Users\davic\Desktop\Rey Fernando\SafeBite\app\src\debug\kotlin', not found
+file or directory 'C:\Users\davic\Desktop\Rey Fernando\SafeBite\app\src\debug\java', not found
+file or directory 'C:\Users\davic\Desktop\Rey Fernando\SafeBite\app\src\main\kotlin', not found
+file or directory 'C:\Users\davic\Desktop\Rey Fernando\SafeBite\app\src\debug\java', not found
+file or directory 'C:\Users\davic\Desktop\Rey Fernando\SafeBite\app\src\debug\kotlin', not found
+file or directory 'C:\Users\davic\Desktop\Rey Fernando\SafeBite\app\src\debug\java', not found
+file or directory 'C:\Users\davic\Desktop\Rey Fernando\SafeBite\app\src\main\kotlin', not found
+file or directory 'C:\Users\davic\Desktop\Rey Fernando\SafeBite\app\src\debug\java', not found
+GradleBuildProject.Builder should not be accessed through AnalyticsConfiguratorService after AnalyticsService is created. Analytics information of this build might be incomplete.
+Registered task dependencies: app:kotlinCompilerClasspath
+Starting dependency analysis
+Caching disabled for task ':app:kspDebugKotlin' because:
+  Build cache is disabled
+Task ':app:kspDebugKotlin' is not up-to-date because:
+  Input property 'sources' file C:\Users\davic\Desktop\Rey Fernando\SafeBite\app\src\main\java\com\example\safebite\MainActivity.kt has changed.
+file or directory 'C:\Users\davic\Desktop\Rey Fernando\SafeBite\app\src\debug\kotlin', not found
+file or directory 'C:\Users\davic\Desktop\Rey Fernando\SafeBite\app\src\debug\java', not found
+file or directory 'C:\Users\davic\Desktop\Rey Fernando\SafeBite\app\src\main\kotlin', not found
+file or directory 'C:\Users\davic\Desktop\Rey Fernando\SafeBite\app\src\debug\java', not found
+file or directory 'C:\Users\davic\Desktop\Rey Fernando\SafeBite\app\src\debug\kotlin', not found
+file or directory 'C:\Users\davic\Desktop\Rey Fernando\SafeBite\app\src\debug\java', not found
+file or directory 'C:\Users\davic\Desktop\Rey Fernando\SafeBite\app\src\main\kotlin', not found
+file or directory 'C:\Users\davic\Desktop\Rey Fernando\SafeBite\app\src\debug\java', not found
+file or directory 'C:\Users\davic\Desktop\Rey Fernando\SafeBite\app\src\debug\kotlin', not found
+file or directory 'C:\Users\davic\Desktop\Rey Fernando\SafeBite\app\src\debug\java', not found
+file or directory 'C:\Users\davic\Desktop\Rey Fernando\SafeBite\app\src\main\kotlin', not found
+file or directory 'C:\Users\davic\Desktop\Rey Fernando\SafeBite\app\src\debug\java', not found
+file or directory 'C:\Users\davic\Desktop\Rey Fernando\SafeBite\app\src\debug\kotlin', not found
+file or directory 'C:\Users\davic\Desktop\Rey Fernando\SafeBite\app\src\debug\java', not found
+file or directory 'C:\Users\davic\Desktop\Rey Fernando\SafeBite\app\src\main\kotlin', not found
+file or directory 'C:\Users\davic\Desktop\Rey Fernando\SafeBite\app\src\debug\java', not found
+Kotlin source files: C:\Users\davic\Desktop\Rey Fernando\SafeBite\app\src\main\java\com\example\safebite\data\api\OpenFoodFactsApi.kt, C:\Users\davic\Desktop\Rey Fernando\SafeBite\app\src\main\java\com\example\safebite\data\api\ProductResponse.kt, C:\Users\davic\Desktop\Rey Fernando\SafeBite\app\src\main\java\com\example\safebite\data\api\RetrofitClient.kt, C:\Users\davic\Desktop\Rey Fernando\SafeBite\app\src\main\java\com\example\safebite\data\FriendRequest.kt, C:\Users\davic\Desktop\Rey Fernando\SafeBite\app\src\main\java\com\example\safebite\data\Notification.kt, C:\Users\davic\Desktop\Rey Fernando\SafeBite\app\src\main\java\com\example\safebite\data\Post.kt, C:\Users\davic\Desktop\Rey Fernando\SafeBite\app\src\main\java\com\example\safebite\data\Report.kt, C:\Users\davic\Desktop\Rey Fernando\SafeBite\app\src\main\java\com\example\safebite\data\User.kt, C:\Users\davic\Desktop\Rey Fernando\SafeBite\app\src\main\java\com\example\safebite\MainActivity.kt, C:\Users\davic\Desktop\Rey Fernando\SafeBite\app\src\main\java\com\example\safebite\ui\auth\LoginScreen.kt, C:\Users\davic\Desktop\Rey Fernando\SafeBite\app\src\main\java\com\example\safebite\ui\auth\SignupScreen.kt, C:\Users\davic\Desktop\Rey Fernando\SafeBite\app\src\main\java\com\example\safebite\ui\home\HomeScreen.kt, C:\Users\davic\Desktop\Rey Fernando\SafeBite\app\src\main\java\com\example\safebite\ui\notifications\NotificationsScreen.kt, C:\Users\davic\Desktop\Rey Fernando\SafeBite\app\src\main\java\com\example\safebite\ui\profile\ProfileScreen.kt, C:\Users\davic\Desktop\Rey Fernando\SafeBite\app\src\main\java\com\example\safebite\ui\scanner\ResultScreen.kt, C:\Users\davic\Desktop\Rey Fernando\SafeBite\app\src\main\java\com\example\safebite\ui\scanner\ScannerScreen.kt, C:\Users\davic\Desktop\Rey Fernando\SafeBite\app\src\main\java\com\example\safebite\ui\scanner\UserDetailScreen.kt, C:\Users\davic\Desktop\Rey Fernando\SafeBite\app\src\main\java\com\example\safebite\ui\shoppinglist\ShoppingListScreen.kt, C:\Users\davic\Desktop\Rey Fernando\SafeBite\app\src\main\java\com\example\safebite\ui\theme\Color.kt, C:\Users\davic\Desktop\Rey Fernando\SafeBite\app\src\main\java\com\example\safebite\ui\theme\Theme.kt, C:\Users\davic\Desktop\Rey Fernando\SafeBite\app\src\main\java\com\example\safebite\ui\theme\Type.kt, C:\Users\davic\Desktop\Rey Fernando\SafeBite\app\src\main\java\com\example\safebite\utils\BarcodeScanner.kt, C:\Users\davic\Desktop\Rey Fernando\SafeBite\app\src\main\java\com\example\safebite\utils\HistoryUtils.kt, C:\Users\davic\Desktop\Rey Fernando\SafeBite\app\src\main\java\com\example\safebite\utils\MediaUtils.kt, C:\Users\davic\Desktop\Rey Fernando\SafeBite\app\src\main\java\com\example\safebite\utils\ModerationUtils.kt, C:\Users\davic\Desktop\Rey Fernando\SafeBite\app\src\main\java\com\example\safebite\utils\ShoppingListUtils.kt
+Java source files: 
+Script source files: 
+Script file extensions: 
+[KOTLIN] Kotlin compilation 'jdkHome' argument: null
+i: [ksp] loaded provider(s): [androidx.room.RoomKspProcessor$Provider]
+e: file:///C:/Users/davic/Desktop/Rey%20Fernando/SafeBite/app/src/main/java/com/example/safebite/MainActivity.kt:467:1 Expecting a top level declaration
+Finished executing kotlin compiler using DAEMON strategy
+
+[Incubating] Problems report is available at: file:///C:/Users/davic/Desktop/Rey%20Fernando/SafeBite/build/reports/problems/problems-report.html
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':app:kspDebugKotlin'.
+> A failure occurred while executing org.jetbrains.kotlin.compilerRunner.GradleCompilerRunnerWithWorkers$GradleKotlinCompilerWorkAction
+   > Compilation error. See log for more details
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --debug option to get more log output.
+> Run with --scan to generate a Build Scan (powered by Develocity).
+> Get more help at https://help.gradle.org.
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 10.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/9.2.1/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD FAILED in 2s
+15 actionable tasks: 1 executed, 14 up-to-date
+Watched directory hierarchies: [C:\Users\davic\Desktop\Rey Fernando\SafeBite]

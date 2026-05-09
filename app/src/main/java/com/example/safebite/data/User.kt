@@ -8,6 +8,11 @@ data class User(
     val email: String = "",
     val password: String = "",
     val allergens: String = "",
+    val favoriteFoods: String = "",
     val friends: List<String> = emptyList(),
-    val profileImageUrl: String? = null
+    val profileImageUrl: String? = null,
+    val isPrivate: Boolean = false,
+    val isAdmin: Boolean = false,
+    val bannedUntil: Long? = null,
+    val warnings: List<Long> = emptyList()
 )

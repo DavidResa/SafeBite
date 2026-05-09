@@ -2,6 +2,7 @@ package com.example.safebite.ui.scanner
 
 import android.Manifest
 import android.content.pm.PackageManager
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.camera.core.CameraSelector
@@ -23,6 +24,7 @@ import androidx.compose.material.icons.filled.Search
 import com.example.safebite.ui.profile.AvatarImage
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -49,6 +51,9 @@ import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.tasks.await
 import java.util.concurrent.Executors
+import com.example.safebite.data.Report
+import com.example.safebite.utils.ModerationUtils
+import androidx.compose.material.icons.filled.Warning
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -172,7 +177,39 @@ fun UserSearchTab(onUserSelected: (String) -> Unit) {
         sharedPrefs.edit().putString(historyKey, limitedHistory.joinToString(",,") { "${it.id}::${it.username}::${it.profileImageUrl ?: ""}" }).apply()
     }
 
+    fun removeFromHistory(user: SearchUserResult) {
+        val updatedHistory = searchHistory.filter { it.id != user.id }
+        searchHistory = updatedHistory
+        sharedPrefs.edit().putString(historyKey, updatedHistory.joinToString(",,") { "${it.id}::${it.username}::${it.profileImageUrl ?: ""}" }).apply()
+    }
+
     val db = Firebase.firestore
+
+    LaunchedEffect(userId) {
+        val currentHistory = searchHistory.toList()
+        if (currentHistory.isNotEmpty()) {
+            try {
+                val validIds = mutableSetOf<String>()
+                val chunks = currentHistory.map { it.id }.chunked(10)
+                for (chunk in chunks) {
+                    val snapshot = db.collection("users")
+                        .whereIn(com.google.firebase.firestore.FieldPath.documentId(), chunk)
+                        .get()
+                        .await()
+                    for (doc in snapshot.documents) {
+                        validIds.add(doc.id)
+                    }
+                }
+                if (validIds.size < currentHistory.size) {
+                    val validHistory = currentHistory.filter { validIds.contains(it.id) }
+                    searchHistory = validHistory
+                    sharedPrefs.edit().putString(historyKey, validHistory.joinToString(",,") { "${it.id}::${it.username}::${it.profileImageUrl ?: ""}" }).apply()
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
 
     LaunchedEffect(searchQuery) {
         if (searchQuery.isNotEmpty()) {
@@ -267,7 +304,7 @@ fun UserSearchTab(onUserSelected: (String) -> Unit) {
                         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
                     ) {
                         Row(
-                            modifier = Modifier.padding(16.dp),
+                            modifier = Modifier.padding(16.dp).fillMaxWidth(),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             AvatarImage(
@@ -277,7 +314,13 @@ fun UserSearchTab(onUserSelected: (String) -> Unit) {
                                 placeholderTint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                             )
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text(text = user.username, style = MaterialTheme.typography.bodyMedium)
+                            Text(text = user.username, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
+                            IconButton(
+                                onClick = { removeFromHistory(user) },
+                                modifier = Modifier.size(24.dp)
+                            ) {
+                                Icon(Icons.Default.Close, contentDescription = "Eliminar de historial")
+                            }
                         }
                     }
                 }
@@ -311,8 +354,21 @@ fun UserSearchTab(onUserSelected: (String) -> Unit) {
 fun CategoryFeed(category: String) {
     val db = Firebase.firestore
     var posts by remember { mutableStateOf<List<Post>>(emptyList()) }
+    var userFriends by remember { mutableStateOf<List<String>>(emptyList()) }
+    var isAdmin by remember { mutableStateOf(false) }
     var isLoading by remember { mutableStateOf(true) }
     var showUploadDialog by remember { mutableStateOf(false) }
+
+    val currentUserId = FirebaseAuth.getInstance().currentUser?.uid
+
+    LaunchedEffect(currentUserId) {
+        if (currentUserId != null) {
+            db.collection("users").document(currentUserId).get().addOnSuccessListener { doc ->
+                userFriends = doc.get("friends") as? List<String> ?: emptyList()
+                isAdmin = doc.getBoolean("isAdmin") ?: false
+            }
+        }
+    }
 
     DisposableEffect(category) {
         isLoading = true
@@ -322,7 +378,6 @@ fun CategoryFeed(category: String) {
             .addSnapshotListener { snapshot, e ->
                 if (snapshot != null) {
                     posts = snapshot.documents.mapNotNull { it.toObject(Post::class.java) }
-                        .sortedByDescending { it.timestamp }
                 }
                 isLoading = false
             }
@@ -343,9 +398,15 @@ fun CategoryFeed(category: String) {
                 Text("Aún no hay publicaciones en $category", modifier = Modifier.align(Alignment.Center))
             } else {
                 val currentUserId = FirebaseAuth.getInstance().currentUser?.uid
+                val sortedPosts = remember(posts, userFriends) {
+                    posts.sortedWith(
+                        compareByDescending<Post> { userFriends.contains(it.authorId) }
+                            .thenByDescending { it.timestamp }
+                    )
+                }
                 LazyColumn(modifier = Modifier.fillMaxSize()) {
-                    items(posts) { post ->
-                        PostCard(post, currentUserId)
+                    items(sortedPosts) { post ->
+                        PostCard(post, currentUserId, userFriends, isAdmin)
                     }
                 }
             }
@@ -358,7 +419,7 @@ fun CategoryFeed(category: String) {
 }
 
 @Composable
-fun PostCard(post: Post, currentUserId: String? = null) {
+fun PostCard(post: Post, currentUserId: String? = null, currentUserFriends: List<String> = emptyList(), isAdmin: Boolean = false) {
     val context = LocalContext.current
     var showDeleteConfirm by remember { mutableStateOf(false) }
 
@@ -370,23 +431,18 @@ fun PostCard(post: Post, currentUserId: String? = null) {
             confirmButton = {
                 TextButton(onClick = {
                     showDeleteConfirm = false
-                    kotlinx.coroutines.CoroutineScope(Dispatchers.IO).launch {
-                        try {
-                            val db = com.google.firebase.firestore.FirebaseFirestore.getInstance()
-                            if (post.mediaType == "video" && post.mediaUrl?.startsWith("firestore_video_") == true) {
-                                val chunks = db.collection("posts").document(post.id).collection("chunks").get().await()
-                                for (doc in chunks) {
-                                    doc.reference.delete().await()
-                                }
-                            }
-                            db.collection("posts").document(post.id).delete().await()
-                            withContext(Dispatchers.Main) {
-                                Toast.makeText(context, "Publicación eliminada", Toast.LENGTH_SHORT).show()
-                            }
-                        } catch (e: Exception) {
-                            withContext(Dispatchers.Main) {
-                                Toast.makeText(context, "Error al eliminar: ${e.message}", Toast.LENGTH_SHORT).show()
-                            }
+                    kotlinx.coroutines.CoroutineScope(Dispatchers.Main).launch {
+                        val success = ModerationUtils.moderatePost(
+                            context = context,
+                            db = Firebase.firestore,
+                            post = post,
+                            isAdmin = isAdmin,
+                            currentUserId = currentUserId
+                        )
+                        if (success) {
+                            Toast.makeText(context, "Publicación eliminada", Toast.LENGTH_SHORT).show()
+                        } else {
+                            Toast.makeText(context, "Error al eliminar la publicación", Toast.LENGTH_SHORT).show()
                         }
                     }
                 }) {
@@ -401,16 +457,47 @@ fun PostCard(post: Post, currentUserId: String? = null) {
         )
     }
 
+    var showReportDialog by remember { mutableStateOf(false) }
+
+    if (showReportDialog) {
+        ReportPostDialog(
+            post = post,
+            onDismiss = { showReportDialog = false },
+            onReportSent = {
+                Toast.makeText(context, "Reporte enviado para revisión", Toast.LENGTH_SHORT).show()
+                showReportDialog = false
+            }
+        )
+    }
+
     Card(
         modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                Text(post.authorUsername, style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary)
-                if (currentUserId != null && currentUserId == post.authorId) {
-                    IconButton(onClick = { showDeleteConfirm = true }) {
-                        Icon(Icons.Default.Delete, contentDescription = "Eliminar", tint = MaterialTheme.colorScheme.error)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(post.authorUsername, style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary)
+                    if (currentUserFriends.contains(post.authorId)) {
+                        Text(
+                            text = " • Amigo",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = androidx.compose.ui.graphics.Color(0xFF4CAF50) // Green indicator
+                        )
+                    }
+                }
+                if (currentUserId != null) {
+                    Row {
+                        if (currentUserId != post.authorId && !isAdmin) {
+                            IconButton(onClick = { showReportDialog = true }) {
+                                Icon(Icons.Default.Warning, contentDescription = "Reportar", tint = MaterialTheme.colorScheme.secondary)
+                            }
+                        }
+                        if (currentUserId == post.authorId || isAdmin) {
+                            IconButton(onClick = { showDeleteConfirm = true }) {
+                                Icon(Icons.Default.Delete, contentDescription = "Eliminar", tint = MaterialTheme.colorScheme.error)
+                            }
+                        }
                     }
                 }
             }
@@ -636,6 +723,75 @@ fun UploadPostDialog(category: String, onDismiss: () -> Unit) {
         },
         dismissButton = {
             TextButton(onClick = onDismiss, enabled = !isUploading) {
+                Text("Cancelar")
+            }
+        }
+    )
+}
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ReportPostDialog(
+    post: Post,
+    onDismiss: () -> Unit,
+    onReportSent: () -> Unit
+) {
+    var reason by remember { mutableStateOf("") }
+    var isSending by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+    val db = Firebase.firestore
+    val auth = FirebaseAuth.getInstance()
+    val reporterId = auth.currentUser?.uid ?: "unknown"
+
+    AlertDialog(
+        onDismissRequest = { if (!isSending) onDismiss() },
+        title = { Text("Reportar publicación") },
+        text = {
+            Column {
+                Text("¿Por qué quieres reportar esta publicación?", style = MaterialTheme.typography.bodyMedium)
+                Spacer(modifier = Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = reason,
+                    onValueChange = { reason = it },
+                    placeholder = { Text("Escribe el motivo...") },
+                    modifier = Modifier.fillMaxWidth().height(100.dp)
+                )
+                if (isSending) {
+                    Spacer(modifier = Modifier.height(16.dp))
+                    LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+                }
+            }
+        },
+        confirmButton = {
+            Button(
+                enabled = !isSending && reason.isNotBlank(),
+                onClick = {
+                    isSending = true
+                    val reportId = UUID.randomUUID().toString()
+                    val report = Report(
+                        id = reportId,
+                        postId = post.id,
+                        reporterId = reporterId,
+                        authorId = post.authorId,
+                        reason = reason,
+                        postText = post.textContent.take(100),
+                        timestamp = System.currentTimeMillis()
+                    )
+                    
+                    db.collection("reports").document(reportId).set(report)
+                        .addOnSuccessListener {
+                            onReportSent()
+                        }
+                        .addOnFailureListener {
+                            isSending = false
+                            Toast.makeText(context, "Error al enviar reporte", Toast.LENGTH_SHORT).show()
+                        }
+                }
+            ) {
+                Text("Enviar Reporte")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss, enabled = !isSending) {
                 Text("Cancelar")
             }
         }

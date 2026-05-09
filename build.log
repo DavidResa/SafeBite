@@ -1,0 +1,93 @@
+> Task :app:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preDebugBuild UP-TO-DATE
+> Task :app:checkDebugAarMetadata UP-TO-DATE
+> Task :app:generateDebugResValues UP-TO-DATE
+> Task :app:processDebugGoogleServices UP-TO-DATE
+> Task :app:mapDebugSourceSetPaths UP-TO-DATE
+> Task :app:generateDebugResources UP-TO-DATE
+> Task :app:mergeDebugResources UP-TO-DATE
+> Task :app:packageDebugResources UP-TO-DATE
+> Task :app:parseDebugLocalResources UP-TO-DATE
+> Task :app:createDebugCompatibleScreenManifests UP-TO-DATE
+> Task :app:extractDeepLinksDebug UP-TO-DATE
+> Task :app:processDebugMainManifest UP-TO-DATE
+> Task :app:processDebugManifest UP-TO-DATE
+> Task :app:processDebugManifestForPackage UP-TO-DATE
+> Task :app:processDebugResources UP-TO-DATE
+> Task :app:kspDebugKotlin UP-TO-DATE
+
+> Task :app:compileDebugKotlin FAILED
+e: file:///C:/Users/davic/Desktop/Rey%20Fernando/SafeBite/app/src/main/java/com/example/safebite/ui/scanner/ScannerScreen.kt:135:26 Property delegate must have a 'setValue(Nothing?, KMutableProperty0<*>, Any?)' method. None of the following functions is applicable:
+fun MutableFloatState.setValue(thisObj: Any?, property: KProperty<*>, value: Float): Unit
+fun MutableDoubleState.setValue(thisObj: Any?, property: KProperty<*>, value: Double): Unit
+fun MutableIntState.setValue(thisObj: Any?, property: KProperty<*>, value: Int): Unit
+fun MutableLongState.setValue(thisObj: Any?, property: KProperty<*>, value: Long): Unit
+fun <T> MutableState<T>.setValue(thisObj: Any?, property: KProperty<*>, value: T): Unit
+e: file:///C:/Users/davic/Desktop/Rey%20Fernando/SafeBite/app/src/main/java/com/example/safebite/ui/scanner/ScannerScreen.kt:145:59 Unresolved reference 'filter'.
+e: file:///C:/Users/davic/Desktop/Rey%20Fernando/SafeBite/app/src/main/java/com/example/safebite/ui/scanner/ScannerScreen.kt:145:68 Unresolved reference 'it'.
+e: file:///C:/Users/davic/Desktop/Rey%20Fernando/SafeBite/app/src/main/java/com/example/safebite/ui/scanner/ScannerScreen.kt:146:45 Overload resolution ambiguity between candidates:
+fun <T> Array<out T>.take(n: Int): List<T>
+fun BooleanArray.take(n: Int): List<Boolean>
+fun ByteArray.take(n: Int): List<Byte>
+fun CharArray.take(n: Int): List<Char>
+fun DoubleArray.take(n: Int): List<Double>
+fun FloatArray.take(n: Int): List<Float>
+fun IntArray.take(n: Int): List<Int>
+fun LongArray.take(n: Int): List<Long>
+fun ShortArray.take(n: Int): List<Short>
+fun <T> Iterable<T>.take(n: Int): List<T>
+fun UByteArray.take(n: Int): List<UByte>
+fun UIntArray.take(n: Int): List<UInt>
+fun ULongArray.take(n: Int): List<ULong>
+fun UShortArray.take(n: Int): List<UShort>
+fun <T> Sequence<T>.take(n: Int): Sequence<T>
+fun CharSequence.take(n: Int): CharSequence
+fun String.take(n: Int): String
+e: file:///C:/Users/davic/Desktop/Rey%20Fernando/SafeBite/app/src/main/java/com/example/safebite/ui/scanner/ScannerScreen.kt:148:69 Overload resolution ambiguity between candidates:
+fun <T> Array<out T>.joinToString(separator: CharSequence = ..., prefix: CharSequence = ..., postfix: CharSequence = ..., limit: Int = ..., truncated: CharSequence = ..., transform: ((T) -> CharSequence)? = ...): String
+fun BooleanArray.joinToString(separator: CharSequence = ..., prefix: CharSequence = ..., postfix: CharSequence = ..., limit: Int = ..., truncated: CharSequence = ..., transform: ((Boolean) -> CharSequence)? = ...): String
+fun ByteArray.joinToString(separator: CharSequence = ..., prefix: CharSequence = ..., postfix: CharSequence = ..., limit: Int = ..., truncated: CharSequence = ..., transform: ((Byte) -> CharSequence)? = ...): String
+fun CharArray.joinToString(separator: CharSequence = ..., prefix: CharSequence = ..., postfix: CharSequence = ..., limit: Int = ..., truncated: CharSequence = ..., transform: ((Char) -> CharSequence)? = ...): String
+fun DoubleArray.joinToString(separator: CharSequence = ..., prefix: CharSequence = ..., postfix: CharSequence = ..., limit: Int = ..., truncated: CharSequence = ..., transform: ((Double) -> CharSequence)? = ...): String
+fun FloatArray.joinToString(separator: CharSequence = ..., prefix: CharSequence = ..., postfix: CharSequence = ..., limit: Int = ..., truncated: CharSequence = ..., transform: ((Float) -> CharSequence)? = ...): String
+fun IntArray.joinToString(separator: CharSequence = ..., prefix: CharSequence = ..., postfix: CharSequence = ..., limit: Int = ..., truncated: CharSequence = ..., transform: ((Int) -> CharSequence)? = ...): String
+fun LongArray.joinToString(separator: CharSequence = ..., prefix: CharSequence = ..., postfix: CharSequence = ..., limit: Int = ..., truncated: CharSequence = ..., transform: ((Long) -> CharSequence)? = ...): String
+fun ShortArray.joinToString(separator: CharSequence = ..., prefix: CharSequence = ..., postfix: CharSequence = ..., limit: Int = ..., truncated: CharSequence = ..., transform: ((Short) -> CharSequence)? = ...): String
+fun <T> Iterable<T>.joinToString(separator: CharSequence = ..., prefix: CharSequence = ..., postfix: CharSequence = ..., limit: Int = ..., truncated: CharSequence = ..., transform: ((T) -> CharSequence)? = ...): String
+fun <T> Sequence<T>.joinToString(separator: CharSequence = ..., prefix: CharSequence = ..., postfix: CharSequence = ..., limit: Int = ..., truncated: CharSequence = ..., transform: ((T) -> CharSequence)? = ...): String
+e: file:///C:/Users/davic/Desktop/Rey%20Fernando/SafeBite/app/src/main/java/com/example/safebite/ui/scanner/ScannerScreen.kt:148:93 Unresolved reference 'it'.
+e: file:///C:/Users/davic/Desktop/Rey%20Fernando/SafeBite/app/src/main/java/com/example/safebite/ui/scanner/ScannerScreen.kt:148:103 Unresolved reference 'it'.
+e: file:///C:/Users/davic/Desktop/Rey%20Fernando/SafeBite/app/src/main/java/com/example/safebite/ui/scanner/ScannerScreen.kt:222:47 Unresolved reference 'isNotEmpty'.
+e: file:///C:/Users/davic/Desktop/Rey%20Fernando/SafeBite/app/src/main/java/com/example/safebite/ui/scanner/ScannerScreen.kt:225:23 Argument type mismatch: actual type is 'kotlin.Any?', but 'kotlin.Int' was expected.
+e: file:///C:/Users/davic/Desktop/Rey%20Fernando/SafeBite/app/src/main/java/com/example/safebite/ui/scanner/ScannerScreen.kt:226:21 @Composable invocations can only happen from the context of a @Composable function
+e: file:///C:/Users/davic/Desktop/Rey%20Fernando/SafeBite/app/src/main/java/com/example/safebite/ui/scanner/ScannerScreen.kt:231:46 Argument type mismatch: actual type is 'kotlin.Int', but 'com.example.safebite.ui.scanner.SearchUserResult' was expected.
+e: file:///C:/Users/davic/Desktop/Rey%20Fernando/SafeBite/app/src/main/java/com/example/safebite/ui/scanner/ScannerScreen.kt:232:53 Unresolved reference 'id'.
+e: file:///C:/Users/davic/Desktop/Rey%20Fernando/SafeBite/app/src/main/java/com/example/safebite/ui/scanner/ScannerScreen.kt:234:50 @Composable invocations can only happen from the context of a @Composable function
+e: file:///C:/Users/davic/Desktop/Rey%20Fernando/SafeBite/app/src/main/java/com/example/safebite/ui/scanner/ScannerScreen.kt:235:47 @Composable invocations can only happen from the context of a @Composable function
+e: file:///C:/Users/davic/Desktop/Rey%20Fernando/SafeBite/app/src/main/java/com/example/safebite/ui/scanner/ScannerScreen.kt:235:89 @Composable invocations can only happen from the context of a @Composable function
+e: file:///C:/Users/davic/Desktop/Rey%20Fernando/SafeBite/app/src/main/java/com/example/safebite/ui/scanner/ScannerScreen.kt:242:46 Unresolved reference 'username'.
+
+[Incubating] Problems report is available at: file:///C:/Users/davic/Desktop/Rey%20Fernando/SafeBite/build/reports/problems/problems-report.html
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':app:compileDebugKotlin'.
+> A failure occurred while executing org.jetbrains.kotlin.compilerRunner.GradleCompilerRunnerWithWorkers$GradleKotlinCompilerWorkAction
+   > Compilation error. See log for more details
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to generate a Build Scan (powered by Develocity).
+> Get more help at https://help.gradle.org.
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 10.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/9.2.1/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD FAILED in 2s
+16 actionable tasks: 1 executed, 15 up-to-date
